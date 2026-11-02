@@ -134,8 +134,8 @@ LINE チャネルの設定項目は、仕様書の「10. 事前の準備」を�
 |---|---|---|
 | 0 土台作り | 完了 | [#1](https://github.com/m0t0k3y-hub/line-bot/pull/1) |
 | 1 最小のBot | 完了 | [#2](https://github.com/m0t0k3y-hub/line-bot/pull/2) |
-| 2 グループ対応 | 作業中 | |
-| 3 管理画面の基盤 | 未着手 | |
+| 2 グループ対応 | 完了 | [#3](https://github.com/m0t0k3y-hub/line-bot/pull/3) |
+| 3 管理画面の基盤 | 作業中 | |
 | 4 ペルソナの調整 | 未着手 | |
 | 5 設定と制限 | 未着手 | |
 | 6 評価とログ | 未着手 | |
