@@ -22,6 +22,15 @@ const timestamps = {
     .$onUpdate(() => new Date()),
 }
 
+export const admins = pgTable('admins', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  // 小文字に正規化して保存する
+  email: text('email').notNull().unique(),
+  name: text('name').notNull().default(''),
+  createdBy: uuid('created_by').references((): AnyPgColumn => admins.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
 export const providers = ['anthropic', 'openai', 'google'] as const
 export type Provider = (typeof providers)[number]
 
@@ -54,8 +63,7 @@ export const personaVersions = pgTable(
       .notNull()
       .default({}),
     note: text('note').notNull().default(''),
-    // 管理者テーブルはフェーズ3で追加する
-    createdBy: uuid('created_by'),
+    createdBy: uuid('created_by').references(() => admins.id, { onDelete: 'set null' }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [unique().on(t.personaId, t.versionNo)],
@@ -141,6 +149,7 @@ export const settings = pgTable('settings', {
     .$onUpdate(() => new Date()),
 })
 
+export type Admin = typeof admins.$inferSelect
 export type Chat = typeof chats.$inferSelect
 export type Message = typeof messages.$inferSelect
 export type PersonaVersion = typeof personaVersions.$inferSelect

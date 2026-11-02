@@ -15,6 +15,14 @@ const envSchema = z.object({
   ANTHROPIC_API_KEY: optionalKey,
   OPENAI_API_KEY: optionalKey,
   GOOGLE_GENERATIVE_AI_API_KEY: optionalKey,
+  // 管理画面（Auth.js）。未設定でも Bot は動くように、管理画面を開いたときに確認する
+  AUTH_SECRET: optionalKey,
+  AUTH_GOOGLE_ID: optionalKey,
+  AUTH_GOOGLE_SECRET: optionalKey,
+  INITIAL_ADMIN_EMAIL: z.preprocess(
+    (value) => (value === '' ? undefined : value),
+    z.email().toLowerCase().optional(),
+  ),
 })
 
 export type Env = z.infer<typeof envSchema>
