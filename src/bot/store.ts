@@ -1,9 +1,10 @@
-import { and, desc, eq } from 'drizzle-orm'
+import { and, desc, eq, sql } from 'drizzle-orm'
 
 import { getDb } from '@/db'
 import {
   type Chat,
   chats,
+  dailyUsage,
   lineUsers,
   messages,
   personas,
@@ -91,5 +92,23 @@ export async function saveDisplayName(lineUserId: string, displayName: string): 
     .onConflictDoUpdate({
       target: lineUsers.lineUserId,
       set: { displayName, updatedAt: new Date() },
+    })
+}
+
+export async function getReplyCount(chatId: string, date: string): Promise<number> {
+  const [row] = await getDb()
+    .select({ replyCount: dailyUsage.replyCount })
+    .from(dailyUsage)
+    .where(and(eq(dailyUsage.chatId, chatId), eq(dailyUsage.date, date)))
+  return row?.replyCount ?? 0
+}
+
+export async function incrementReplyCount(chatId: string, date: string): Promise<void> {
+  await getDb()
+    .insert(dailyUsage)
+    .values({ chatId, date, replyCount: 1 })
+    .onConflictDoUpdate({
+      target: [dailyUsage.chatId, dailyUsage.date],
+      set: { replyCount: sql`${dailyUsage.replyCount} + 1` },
     })
 }

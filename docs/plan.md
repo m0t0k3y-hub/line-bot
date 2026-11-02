@@ -136,6 +136,6 @@ LINE チャネルの設定項目は、仕様書の「10. 事前の準備」を�
 | 1 最小のBot | 完了 | [#2](https://github.com/m0t0k3y-hub/line-bot/pull/2) |
 | 2 グループ対応 | 完了 | [#3](https://github.com/m0t0k3y-hub/line-bot/pull/3) |
 | 3 管理画面の基盤 | 完了 | [#4](https://github.com/m0t0k3y-hub/line-bot/pull/4) |
-| 4 ペルソナの調整 | 作業中 | |
-| 5 設定と制限 | 未着手 | |
+| 4 ペルソナの調整 | 完了 | [#5](https://github.com/m0t0k3y-hub/line-bot/pull/5) |
+| 5 設定と制限 | 作業中 | |
 | 6 評価とログ | 未着手 | |

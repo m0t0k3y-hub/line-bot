@@ -1,5 +1,6 @@
 import type { webhook } from '@line/bot-sdk'
 
+import { jstDate, resolveChatSettings } from '@/chats/settings'
 import type { Chat } from '@/db/schema'
 import { getLineClient, replyText } from '@/lib/line'
 import { generateReply } from '@/llm'
@@ -12,7 +13,9 @@ import {
   getCachedDisplayName,
   getCurrentPersonaVersion,
   getRecentChatMessages,
+  getReplyCount,
   getSettings,
+  incrementReplyCount,
   markEventProcessed,
   saveDisplayName,
   saveMessage,
@@ -152,21 +155,35 @@ async function handleText(
 
 async function replyWithPersona(chat: Chat, replyToken: string) {
   const settings = await getSettings()
-  const personaId = chat.personaId ?? settings.defaultPersonaId
-  const version = personaId ? await getCurrentPersonaVersion(personaId) : undefined
+  const resolved = resolveChatSettings(chat, settings)
+  const version = resolved.personaId
+    ? await getCurrentPersonaVersion(resolved.personaId)
+    : undefined
   if (!version) {
     console.warn('no persona is assigned', { chatId: chat.id })
+    return
+  }
+
+  // 回数制限（docs/spec.md「4.5」）。上限時の定型文は回数に数えない
+  const today = jstDate()
+  if ((await getReplyCount(chat.id, today)) >= resolved.dailyLimit) {
+    const sentId = await replyText(replyToken, resolved.limitMessage)
+    await saveMessage({
+      chatId: chat.id,
+      role: 'assistant',
+      kind: 'limit_notice',
+      lineMessageId: sentId,
+      text: resolved.limitMessage,
+    })
     return
   }
 
   // ローディング表示は1対1のトークでしか使えない
   if (chat.type === 'user') void showLoading(chat.lineChatId, settings.llmTimeoutSec)
 
-  const turns = chat.historyTurns ?? settings.historyTurns
-  const maxMessages = chat.historyMaxMessages ?? settings.historyMaxMessages
-  const history = buildHistory(await getRecentChatMessages(chat.id, maxMessages), {
-    turns,
-    maxMessages,
+  const history = buildHistory(await getRecentChatMessages(chat.id, resolved.historyMaxMessages), {
+    turns: resolved.historyTurns,
+    maxMessages: resolved.historyMaxMessages,
     withSpeakers: chat.type !== 'user',
   })
 
@@ -194,6 +211,8 @@ async function replyWithPersona(chat: Chat, replyToken: string) {
       outputTokens: reply.outputTokens,
       latencyMs: reply.latencyMs,
     })
+    // エラーになった返答は回数に数えない
+    await incrementReplyCount(chat.id, today)
   } catch (error) {
     console.error('failed to generate reply', error)
     const sentId = await replyText(replyToken, settings.errorMessage).catch(() => undefined)
