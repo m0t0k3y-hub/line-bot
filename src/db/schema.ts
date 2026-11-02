@@ -12,6 +12,8 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core'
 
+import { type Provider, providers } from '../lib/providers'
+
 // テーブルの意味は docs/spec.md「7. データモデル」を参照
 
 const timestamps = {
@@ -31,8 +33,7 @@ export const admins = pgTable('admins', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 
-export const providers = ['anthropic', 'openai', 'google'] as const
-export type Provider = (typeof providers)[number]
+export { type Provider, providers }
 
 export type FewShot = { user: string; assistant: string }
 
@@ -42,6 +43,8 @@ export const personas = pgTable('personas', {
   description: text('description').notNull().default(''),
   // persona_versions と相互参照になるため、作成直後は null になる
   currentVersionId: uuid('current_version_id').references((): AnyPgColumn => personaVersions.id),
+  // 削除したペルソナ。会話ログが版を参照しているため、行は消さずに一覧から隠す
+  archivedAt: timestamp('archived_at', { withTimezone: true }),
   ...timestamps,
 })
 
@@ -150,6 +153,7 @@ export const settings = pgTable('settings', {
 })
 
 export type Admin = typeof admins.$inferSelect
+export type Persona = typeof personas.$inferSelect
 export type Chat = typeof chats.$inferSelect
 export type Message = typeof messages.$inferSelect
 export type PersonaVersion = typeof personaVersions.$inferSelect

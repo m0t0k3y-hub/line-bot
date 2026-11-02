@@ -7,6 +7,8 @@ import { signOut } from '@/auth'
 // 機能が増えたらここにメニューを追加する
 const menu = [
   { href: '/admin', label: 'ダッシュボード' },
+  { href: '/admin/personas', label: 'ペルソナ' },
+  { href: '/admin/playground', label: 'プレイグラウンド' },
   { href: '/admin/admins', label: '管理者' },
 ] as const
 

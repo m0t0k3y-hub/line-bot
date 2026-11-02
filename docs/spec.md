@@ -206,7 +206,7 @@ ORM（Drizzle など）とUIライブラリは実装時に決める。
 |---|---|---|---|
 | 1 | ログイン | `/admin/login` | Googleアカウントでログインする |
 | 2 | ダッシュボード | `/admin` | 今日の返信数（チャット別）、最近の評価、エラーの件数 |
-| 3 | ペルソナ一覧 | `/admin/personas` | 一覧、新規作成、複製、削除（使用中のペルソナは削除できない） |
+| 3 | ペルソナ一覧 | `/admin/personas` | 一覧、新規作成、複製、削除（使用中のペルソナは削除できない。削除は一覧から隠すアーカイブ方式） |
 | 4 | ペルソナ編集 | `/admin/personas/[id]` | 現行版の編集と保存（保存すると新しい版になる）、プレイグラウンドへの移動 |
 | 5 | 版の履歴 | `/admin/personas/[id]/versions` | 版の一覧（メモ、作成者、日時）、版ごとの評価の集計、2つの版の違いの表示、現行版の切り替え、過去の版から新しい版を作る |
 | 6 | プレイグラウンド | `/admin/playground` | ペルソナと版（または保存前の編集内容）を選んで、管理画面上で会話を試す |
@@ -303,6 +303,7 @@ messages : 会話例（few-shot）
 | name | text | |
 | description | text | 管理者向けのメモ |
 | current_version_id | uuid | 現行版（persona_versions.id） |
+| archived_at | timestamptz? | 削除した日時。会話ログが版を参照しているため行は消さず、一覧から隠す |
 | created_at / updated_at | timestamptz | |
 
 ### persona_versions（ペルソナ版、変更しない）
