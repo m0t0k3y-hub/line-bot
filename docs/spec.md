@@ -353,7 +353,6 @@ messages : 会話例（few-shot）
 | role | text | `user` / `assistant` |
 | kind | text | `chat` / `feedback` / `limit_notice` / `error`（履歴に含めるのは `chat` だけ） |
 | line_message_id | text? | ユーザーの発言なら受信したメッセージID、Bot の返答なら送信したメッセージID |
-| webhook_event_id | text? | 一意。重複の除去に使う（ユーザーの発言のみ） |
 | line_user_id | text? | 発言者（ユーザーの発言のみ） |
 | text | text | |
 | persona_version_id | uuid? | Bot の返答のみ |
@@ -376,6 +375,14 @@ messages : 会話例（few-shot）
 | created_at / updated_at | timestamptz | |
 
 一意制約：(message_id, line_user_id)、(message_id, admin_id)。同じ人が同じ返答を評価し直したら上書きする。
+
+### webhook_events（処理済みイベント）
+| カラム | 型 | 説明 |
+|---|---|---|
+| webhook_event_id | text | PK。LINE の再送による重複処理を防ぐ |
+| created_at | timestamptz | |
+
+※ 当初は messages.webhook_event_id で重複を除く予定だったが、記録しないメッセージ（コマンドなど）も重複を除く必要があるため、専用のテーブルにした。
 
 ### daily_usage（日ごとの回数）
 | カラム | 型 | 説明 |

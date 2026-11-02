@@ -14,11 +14,27 @@ LLM を使って、方言とキャラクターで会話する LINE Bot です。
 
 ```bash
 pnpm install
-cp .env.example .env.local   # 値を埋める
+cp .env.example .env.local   # 値を埋める（DATABASE_URL は Neon の開発用ブランチ）
+pnpm db:migrate              # テーブルを作る
+pnpm db:seed                 # 最初のペルソナと設定を入れる
 pnpm dev
 ```
 
 `http://localhost:3000/api/health` で DB に接続できるかを確認できます。
+
+## LINE から手元の環境を動かす
+
+開発用 LINE チャネルの Webhook URL は `https://dedicate-pointed-aggregate.ngrok-free.dev/api/line/webhook` に設定してあります。
+`pnpm dev` と別のターミナルで ngrok を起動します。
+
+```bash
+ngrok http --url=dedicate-pointed-aggregate.ngrok-free.dev 3000
+```
+
+## 本番環境の DB
+
+Vercel の本番ビルドでは、ビルドの前に `pnpm db:deploy` がマイグレーションと初期データの投入を行います（`vercel.json`）。
+Preview や手元では何もしないので、開発用ブランチには `pnpm db:migrate` を手で実行します。
 
 ## よく使うコマンド
 
