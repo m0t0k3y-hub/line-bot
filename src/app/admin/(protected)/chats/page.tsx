@@ -6,6 +6,8 @@ import { listChats } from '@/chats/store'
 import { hintClass } from '@/app/admin/ui'
 import { chatTypeLabels, replyModeLabels } from './labels'
 
+export const instant = false
+
 export default async function ChatsPage() {
   await requireAdmin()
   const [chats, settings] = await Promise.all([listChats(), getSettings()])

@@ -5,11 +5,13 @@ import type { Chat } from '@/db/schema'
 import { getLineClient, replyText } from '@/lib/line'
 import { generateReply } from '@/llm'
 import { findCommand, parseCommand } from './commands'
+import { parseFeedback } from './feedback'
 import { buildInstructions, cleanReply } from './context'
 import { buildHistory } from './history'
 import { shouldReply, stripBotMentions } from './reply-rule'
 import {
   deactivateChat,
+  findFeedbackTarget,
   getCachedDisplayName,
   getCurrentPersonaVersion,
   getRecentChatMessages,
@@ -18,6 +20,7 @@ import {
   incrementReplyCount,
   markEventProcessed,
   saveDisplayName,
+  saveLineFeedback,
   saveMessage,
   upsertChat,
 } from './store'
@@ -125,6 +128,35 @@ async function handleText(
   }
 
   const text = stripBotMentions(message.text, message.mention)
+
+  // 評価（docs/spec.md「4.6」）。返信条件に関係なく受け付け、LLM には渡さない
+  const feedback = parseFeedback(text)
+  const feedbackTarget = feedback && (await findFeedbackTarget(chat.id, message.quotedMessageId))
+  if (feedback && feedbackTarget) {
+    await saveLineFeedback({ messageId: feedbackTarget.id, ...feedback, lineUserId: userId })
+    // ログには残すが、kind=feedback なので会話の履歴には含めない
+    await saveMessage({
+      chatId: chat.id,
+      role: 'user',
+      kind: 'feedback',
+      lineMessageId: message.id,
+      lineUserId: userId,
+      text,
+    })
+
+    const settings = await getSettings()
+    if (replyToken && settings.feedbackAckEnabled) {
+      const sentId = await replyText(replyToken, settings.feedbackAckMessage)
+      await saveMessage({
+        chatId: chat.id,
+        role: 'assistant',
+        kind: 'feedback',
+        lineMessageId: sentId,
+        text: settings.feedbackAckMessage,
+      })
+    }
+    return
+  }
 
   const command = parseCommand(text)
   if (command) {

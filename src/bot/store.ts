@@ -5,6 +5,7 @@ import {
   type Chat,
   chats,
   dailyUsage,
+  feedbacks,
   lineUsers,
   messages,
   personas,
@@ -111,4 +112,48 @@ export async function incrementReplyCount(chatId: string, date: string): Promise
       target: [dailyUsage.chatId, dailyUsage.date],
       set: { replyCount: sql`${dailyUsage.replyCount} + 1` },
     })
+}
+
+/**
+ * 評価の対象にする Bot の返答。引用されていればその返答、引用がなければそのチャットの最後の返答。
+ * 引用先が Bot の返答でなければ（人の発言への 👍 など）undefined を返す。
+ */
+export async function findFeedbackTarget(
+  chatId: string,
+  quotedMessageId: string | undefined,
+): Promise<{ id: string } | undefined> {
+  const conditions = [
+    eq(messages.chatId, chatId),
+    eq(messages.role, 'assistant'),
+    eq(messages.kind, 'chat'),
+  ]
+  if (quotedMessageId) conditions.push(eq(messages.lineMessageId, quotedMessageId))
+
+  const [row] = await getDb()
+    .select({ id: messages.id })
+    .from(messages)
+    .where(and(...conditions))
+    .orderBy(desc(messages.createdAt))
+    .limit(1)
+  return row
+}
+
+/** LINE からの評価を保存する。同じ人が同じ返答を評価し直したら上書きする */
+export async function saveLineFeedback(values: {
+  messageId: string
+  rating: number
+  comment: string
+  lineUserId: string | undefined
+}): Promise<void> {
+  const insert = getDb()
+    .insert(feedbacks)
+    .values({ ...values, source: 'line' })
+  if (!values.lineUserId) {
+    await insert
+    return
+  }
+  await insert.onConflictDoUpdate({
+    target: [feedbacks.messageId, feedbacks.lineUserId],
+    set: { rating: values.rating, comment: values.comment, updatedAt: new Date() },
+  })
 }

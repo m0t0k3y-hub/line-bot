@@ -3,6 +3,8 @@ import { getSettings } from '@/bot/store'
 import { listPersonaOptions } from '@/chats/store'
 import { SettingsForm } from './settings-form'
 
+export const instant = false
+
 export default async function SettingsPage() {
   await requireAdmin()
   const [settings, personaOptions] = await Promise.all([getSettings(), listPersonaOptions()])
@@ -22,6 +24,8 @@ export default async function SettingsPage() {
           limitMessage: settings.limitMessage,
           errorMessage: settings.errorMessage,
           llmTimeoutSec: String(settings.llmTimeoutSec),
+          feedbackAckEnabled: String(settings.feedbackAckEnabled),
+          feedbackAckMessage: settings.feedbackAckMessage,
         }}
       />
     </div>

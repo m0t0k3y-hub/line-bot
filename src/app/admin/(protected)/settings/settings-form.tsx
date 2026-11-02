@@ -14,7 +14,9 @@ type Props = {
     | 'dailyLimit'
     | 'limitMessage'
     | 'errorMessage'
-    | 'llmTimeoutSec',
+    | 'llmTimeoutSec'
+    | 'feedbackAckEnabled'
+    | 'feedbackAckMessage',
     string
   >
   personaOptions: { id: string; name: string }[]
@@ -77,6 +79,26 @@ export function SettingsForm(props: Props) {
       </Field>
       <Field label="LLM の時間切れ（秒）" hint="5〜50 秒。これを過ぎるとエラー時の返信を返します。">
         <NumberInput value={form.llmTimeoutSec} onChange={set('llmTimeoutSec')} />
+      </Field>
+      <Field
+        label="評価（👍 / 👎）を受け付けたときの返信"
+        hint="オフにすると、評価を受け付けても何も返しません。"
+      >
+        <span className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={form.feedbackAckEnabled === 'true'}
+            onChange={(e) => set('feedbackAckEnabled')(String(e.target.checked))}
+          />
+          返信する
+        </span>
+        {form.feedbackAckEnabled === 'true' && (
+          <input
+            value={form.feedbackAckMessage}
+            onChange={(e) => set('feedbackAckMessage')(e.target.value)}
+            className={inputClass}
+          />
+        )}
       </Field>
 
       <button type="submit" disabled={pending} className={primaryButtonClass}>

@@ -4,6 +4,8 @@ import { toConfigForm } from '@/personas/config'
 import { getPersona, getVersion, listPersonas, listVersions } from '@/personas/store'
 import { PlaygroundWithConfig } from './playground-with-config'
 
+export const instant = false
+
 export default async function PlaygroundPage({ searchParams }: PageProps<'/admin/playground'>) {
   await requireAdmin()
   const query = await searchParams

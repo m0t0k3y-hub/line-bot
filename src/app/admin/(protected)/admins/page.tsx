@@ -2,6 +2,8 @@ import { requireAdmin } from '@/admin/auth'
 import { listAdmins } from '@/admin/store'
 import { AddAdminForm, RemoveAdminButton } from './forms'
 
+export const instant = false
+
 const dateFormat = new Intl.DateTimeFormat('ja-JP', { dateStyle: 'medium', timeZone: 'Asia/Tokyo' })
 
 export default async function AdminsPage() {
