@@ -48,7 +48,7 @@ export function PersonaEditor(props: Props) {
     setConfig((prev) => ({
       ...prev,
       provider,
-      model: modelSuggestions[provider][0] ?? '',
+      model: modelSuggestions[provider][0]?.id ?? '',
       providerOptions: '',
     }))
   }
@@ -212,7 +212,7 @@ export function PersonaEditor(props: Props) {
             />
             <datalist id="model-suggestions">
               {modelSuggestions[config.provider].map((model) => (
-                <option key={model} value={model} />
+                <option key={model.id} value={model.id} label={model.tier} />
               ))}
             </datalist>
           </div>

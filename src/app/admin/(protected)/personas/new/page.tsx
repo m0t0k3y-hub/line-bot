@@ -1,11 +1,12 @@
 import { requireAdmin } from '@/admin/auth'
-import { providers } from '@/lib/providers'
+import { modelSuggestions, providers } from '@/lib/providers'
 import { isProviderAvailable } from '@/llm'
 import { PersonaEditor } from '../persona-editor'
 
 export default async function NewPersonaPage() {
   await requireAdmin()
   const availableProviders = providers.filter(isProviderAvailable)
+  const provider = availableProviders[0] ?? 'google'
 
   return (
     <div className="space-y-6">
@@ -16,8 +17,8 @@ export default async function NewPersonaPage() {
         initialConfig={{
           systemPrompt: '',
           fewShots: [],
-          provider: availableProviders[0] ?? 'google',
-          model: '',
+          provider,
+          model: modelSuggestions[provider][0]?.id ?? '',
           maxOutputTokens: '2048',
           providerOptions: '',
         }}
