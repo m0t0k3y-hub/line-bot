@@ -4,11 +4,16 @@ import { type ReactNode, Suspense } from 'react'
 import { requireAdmin } from '@/admin/auth'
 import { signOut } from '@/auth'
 
+// 管理画面は毎回ログインを確認するので、事前描画（静的シェル）と即時遷移の検証から外す
+export const instant = false
+
 // 機能が増えたらここにメニューを追加する
 const menu = [
   { href: '/admin', label: 'ダッシュボード' },
   { href: '/admin/personas', label: 'ペルソナ' },
   { href: '/admin/playground', label: 'プレイグラウンド' },
+  { href: '/admin/chats', label: 'トーク・グループ' },
+  { href: '/admin/settings', label: '全体の設定' },
   { href: '/admin/admins', label: '管理者' },
 ] as const
 

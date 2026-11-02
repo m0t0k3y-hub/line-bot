@@ -1,10 +1,12 @@
 import {
   type AnyPgColumn,
   boolean,
+  date,
   index,
   integer,
   jsonb,
   pgTable,
+  primaryKey,
   smallint,
   text,
   timestamp,
@@ -129,6 +131,19 @@ export const webhookEvents = pgTable('webhook_events', {
   webhookEventId: text('webhook_event_id').primaryKey(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
+
+// チャットごと・日ごと（日本時間）の Bot の返信数。回数制限に使う
+export const dailyUsage = pgTable(
+  'daily_usage',
+  {
+    chatId: uuid('chat_id')
+      .notNull()
+      .references(() => chats.id, { onDelete: 'cascade' }),
+    date: date('date').notNull(),
+    replyCount: integer('reply_count').notNull().default(0),
+  },
+  (t) => [primaryKey({ columns: [t.chatId, t.date] })],
+)
 
 // 全体の設定。id = 1 の1行だけを使う
 export const settings = pgTable('settings', {
