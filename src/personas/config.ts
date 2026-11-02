@@ -33,6 +33,30 @@ const jsonObject = z.string().transform((text, ctx): Record<string, unknown> => 
   return z.NEVER
 })
 
+export const MAX_OUTPUT_TOKENS_LIMIT = 128000
+
+export const maxOutputTokensSchema = z
+  .string()
+  .trim()
+  .regex(/^\d+$/, '最大出力トークン数は数字で入力してください')
+  .transform(Number)
+  .pipe(
+    z
+      .number()
+      .min(1, '最大出力トークン数は 1 以上にしてください')
+      .max(
+        MAX_OUTPUT_TOKENS_LIMIT,
+        `最大出力トークン数は ${MAX_OUTPUT_TOKENS_LIMIT} 以下にしてください`,
+      ),
+  )
+
+/** 全角の数字を半角にし、数字以外を取り除く（入力欄用） */
+export function toDigits(text: string): string {
+  return text
+    .replace(/[０-９]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0))
+    .replace(/\D/g, '')
+}
+
 export const personaConfigFormSchema = z.object({
   systemPrompt: z.string().trim().min(1, 'システムプロンプトを入力してください'),
   fewShots: z.array(
@@ -43,11 +67,7 @@ export const personaConfigFormSchema = z.object({
   ),
   provider: z.enum(providers),
   model: z.string().trim().min(1, 'モデル ID を入力してください'),
-  maxOutputTokens: z.coerce
-    .number<string>()
-    .int('最大出力トークン数は整数で入力してください')
-    .min(1, '最大出力トークン数は 1 以上にしてください')
-    .max(128000, '最大出力トークン数は 128000 以下にしてください'),
+  maxOutputTokens: maxOutputTokensSchema,
   providerOptions: jsonObject,
 }) satisfies z.ZodType<PersonaConfig, PersonaConfigForm>
 

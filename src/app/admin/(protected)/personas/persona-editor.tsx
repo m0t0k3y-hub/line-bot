@@ -12,7 +12,12 @@ import {
   successTextClass,
 } from '@/app/admin/ui'
 import { modelSuggestions, type Provider, providerLabels, providers } from '@/lib/providers'
-import type { PersonaConfigForm } from '@/personas/config'
+import {
+  maxOutputTokensSchema,
+  type PersonaConfigForm,
+  personaConfigFormSchema,
+  toDigits,
+} from '@/personas/config'
 import { Playground } from '../playground/playground'
 import { type ActionState, savePersonaAction } from './actions'
 
@@ -45,6 +50,13 @@ export function PersonaEditor(props: Props) {
   function update<K extends keyof PersonaConfigForm>(key: K, value: PersonaConfigForm[K]) {
     setConfig((prev) => ({ ...prev, [key]: value }))
   }
+
+  const maxOutputTokensError = maxOutputTokensSchema.safeParse(config.maxOutputTokens).error
+    ?.issues[0]?.message
+
+  const providerOptionsError = personaConfigFormSchema.shape.providerOptions.safeParse(
+    config.providerOptions,
+  ).error?.issues[0]?.message
 
   const suggestions = modelSuggestions[config.provider]
   // 候補にないモデル ID が入っているとき（直接入力）は、自由入力の欄を出す
@@ -247,9 +259,11 @@ export function PersonaEditor(props: Props) {
               id="maxOutputTokens"
               inputMode="numeric"
               value={config.maxOutputTokens}
-              onChange={(e) => update('maxOutputTokens', e.target.value)}
+              onChange={(e) => update('maxOutputTokens', toDigits(e.target.value))}
+              aria-invalid={maxOutputTokensError !== undefined}
               className={inputClass}
             />
+            {maxOutputTokensError && <p className={errorTextClass}>{maxOutputTokensError}</p>}
             <p className={hintClass}>
               考える過程（thinking）もここに含まれるモデルがあるので、余裕を持たせてください。
             </p>
@@ -266,6 +280,7 @@ export function PersonaEditor(props: Props) {
               placeholder={`例：${optionExamples[config.provider]}`}
               className={`${inputClass} font-mono`}
             />
+            {providerOptionsError && <p className={errorTextClass}>{providerOptionsError}</p>}
           </div>
         </fieldset>
 

@@ -6,6 +6,7 @@ import {
   type PersonaConfigForm,
   personaConfigFormSchema,
   toConfigForm,
+  toDigits,
 } from './config'
 import { diffConfigs } from './diff'
 
@@ -73,5 +74,23 @@ describe('diffConfigs', () => {
       { kind: 'same', text: '博多弁で話す\n' },
       { kind: 'added', text: '短く返す\n' },
     ])
+  })
+})
+
+describe('maxOutputTokens', () => {
+  it('数字以外や範囲外は日本語のエラーにする', () => {
+    const message = (value: string) =>
+      personaConfigFormSchema.safeParse(form({ maxOutputTokens: value })).error?.issues[0]?.message
+    expect(message('abc')).toBe('最大出力トークン数は数字で入力してください')
+    expect(message('1.5')).toBe('最大出力トークン数は数字で入力してください')
+    expect(message('0')).toBe('最大出力トークン数は 1 以上にしてください')
+    expect(message('128001')).toBe('最大出力トークン数は 128000 以下にしてください')
+    expect(message(' 512 ')).toBeUndefined()
+  })
+})
+
+describe('toDigits', () => {
+  it('全角の数字を半角にし、数字以外を取り除く', () => {
+    expect(toDigits('１２a3,4')).toBe('1234')
   })
 })
