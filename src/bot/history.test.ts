@@ -49,6 +49,20 @@ describe('buildHistory', () => {
     ])
   })
 
+  it('withSpeakers のときはユーザーの発言に話者名を付ける', () => {
+    const newestFirst = [
+      { role: 'user' as const, text: 'カレー！', speaker: 'はなこ' },
+      { role: 'user' as const, text: '晩ごはん何がいい？', speaker: null },
+      a('よかよ'),
+      { role: 'user' as const, text: 'こんにちは', speaker: 'たろう' },
+    ]
+    expect(buildHistory(newestFirst, { turns: 10, maxMessages: 50, withSpeakers: true })).toEqual([
+      { role: 'user', content: '[たろう] こんにちは' },
+      { role: 'assistant', content: 'よかよ' },
+      { role: 'user', content: '[だれか] 晩ごはん何がいい？\n[はなこ] カレー！' },
+    ])
+  })
+
   it('先頭が Bot の返答なら取り除く', () => {
     const newestFirst = [u('2'), a('1b'), u('1')]
     expect(buildHistory(newestFirst, { turns: 10, maxMessages: 2 })).toEqual([
