@@ -31,10 +31,11 @@ pnpm dev
 ngrok http --url=dedicate-pointed-aggregate.ngrok-free.dev 3000
 ```
 
-## 本番環境の DB
+## Vercel 上の DB
 
-Vercel の本番ビルドでは、ビルドの前に `pnpm db:deploy` がマイグレーションと初期データの投入を行います（`vercel.json`）。
-Preview や手元では何もしないので、開発用ブランチには `pnpm db:migrate` を手で実行します。
+Vercel の本番と Preview のビルドでは、ビルドの前に `pnpm db:deploy` がマイグレーションと初期データの投入を行います（`vercel.json`）。
+Preview は Neon が Git のブランチごとに作る Preview 用ブランチにつながるので、本番の DB には影響しません。
+手元では何もしないので、開発用ブランチには `pnpm db:migrate` を手で実行します。
 
 ## よく使うコマンド
 

@@ -9,7 +9,7 @@ import { initialPersona } from './seed-data'
 // 使い方：tsx scripts/db.ts <migrate|seed|deploy>
 //   migrate … マイグレーションを適用する
 //   seed    … ペルソナが1つもなければ初期データを入れる
-//   deploy  … Vercel の本番ビルドでだけ migrate と seed を行う（それ以外の環境では何もしない）
+//   deploy  … Vercel の本番と Preview のビルドで migrate と seed を行う（手元では何もしない）
 
 loadEnvConfig(process.cwd())
 
@@ -62,7 +62,8 @@ async function main(command: string | undefined) {
     case 'seed':
       return seed()
     case 'deploy':
-      if (process.env.VERCEL_ENV !== 'production') {
+      // Preview は Neon の Preview 用ブランチにつながるので、本番の DB には影響しない
+      if (process.env.VERCEL_ENV !== 'production' && process.env.VERCEL_ENV !== 'preview') {
         console.log(`VERCEL_ENV=${process.env.VERCEL_ENV ?? '(unset)'}, skipping db deploy`)
         return
       }
