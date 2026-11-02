@@ -22,6 +22,14 @@ pnpm dev
 
 `http://localhost:3000/api/health` で DB に接続できるかを確認できます。
 
+## 環境
+
+| 環境    | URL                                       | LINE チャネル | DB（Neon のブランチ）        |
+| ------- | ----------------------------------------- | ------------- | ---------------------------- |
+| 本番    | https://line-bot-inky-sigma.vercel.app    | 本番用        | `main`                       |
+| Preview | PR ごとに作られる（Vercel の認証が必要）  | なし          | `preview/<Git のブランチ名>` |
+| 手元    | http://localhost:3000（ngrok 経由で公開） | 開発用        | `dev`                        |
+
 ## LINE から手元の環境を動かす
 
 開発用 LINE チャネルの Webhook URL は `https://dedicate-pointed-aggregate.ngrok-free.dev/api/line/webhook` に設定してあります。
