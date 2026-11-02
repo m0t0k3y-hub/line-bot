@@ -13,11 +13,18 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio"
+    "db:migrate": "tsx scripts/db.ts migrate",
+    "db:studio": "drizzle-kit studio",
+    "db:seed": "tsx scripts/db.ts seed",
+    "db:deploy": "tsx scripts/db.ts deploy"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^4.0.94",
+    "@ai-sdk/google": "^4.0.109",
+    "@ai-sdk/openai": "^4.0.106",
+    "@line/bot-sdk": "^11.4.0",
     "@neondatabase/serverless": "^1.2.0",
+    "ai": "^7.0.159",
     "drizzle-orm": "^0.45.4",
     "next": "16.4.3",
     "react": "19.3.0",
@@ -36,6 +43,7 @@
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.9.10",
     "tailwindcss": "^4",
+    "tsx": "^4.23.15",
     "typescript": "^5",
     "vitest": "^5.0.5"
   },
