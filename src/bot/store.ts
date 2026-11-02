@@ -68,8 +68,9 @@ export async function saveMessage(values: typeof messages.$inferInsert): Promise
 /** 履歴に使うメッセージを新しい順に返す */
 export async function getRecentChatMessages(chatId: string, limit: number) {
   return getDb()
-    .select({ role: messages.role, text: messages.text })
+    .select({ role: messages.role, text: messages.text, speaker: lineUsers.displayName })
     .from(messages)
+    .leftJoin(lineUsers, eq(lineUsers.lineUserId, messages.lineUserId))
     .where(and(eq(messages.chatId, chatId), eq(messages.kind, 'chat')))
     .orderBy(desc(messages.createdAt))
     .limit(limit)
