@@ -43,6 +43,16 @@ export function PersonaEditor(props: Props) {
     setConfig((prev) => ({ ...prev, [key]: value }))
   }
 
+  // モデル ID とオプションはプロバイダーごとに違うので、切り替えたら入れ替える
+  function changeProvider(provider: Provider) {
+    setConfig((prev) => ({
+      ...prev,
+      provider,
+      model: modelSuggestions[provider][0] ?? '',
+      providerOptions: '',
+    }))
+  }
+
   function updateShot(index: number, key: 'user' | 'assistant', value: string) {
     update(
       'fewShots',
@@ -174,7 +184,7 @@ export function PersonaEditor(props: Props) {
             <select
               id="provider"
               value={config.provider}
-              onChange={(e) => update('provider', e.target.value as Provider)}
+              onChange={(e) => changeProvider(e.target.value as Provider)}
               className={inputClass}
             >
               {providers.map((provider) => (
