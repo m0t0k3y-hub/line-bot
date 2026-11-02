@@ -6,7 +6,10 @@ import { hintClass, secondaryButtonClass } from '@/app/admin/ui'
 import { providerLabels } from '@/lib/providers'
 import { diffConfigs } from '@/personas/diff'
 import { getPersona, listVersions } from '@/personas/store'
+import { getVersionFeedbackStats } from '@/feedbacks/store'
 import { RestoreVersionButton, SetCurrentVersionButton } from '../../persona-buttons'
+
+export const instant = false
 
 const dateFormat = new Intl.DateTimeFormat('ja-JP', {
   dateStyle: 'medium',
@@ -24,6 +27,7 @@ export default async function VersionsPage({
   if (!persona) notFound()
 
   const versions = await listVersions(id)
+  const stats = await getVersionFeedbackStats(versions.map((v) => v.id))
   const query = await searchParams
   // 比べる2つの版。指定がなければ、現行版とその1つ前を比べる
   const currentIndex = Math.max(
@@ -84,6 +88,7 @@ export default async function VersionsPage({
                     {version.replyCount} 件
                   </span>
                 </div>
+                <VersionStats stats={stats.get(version.id)} versionId={version.id} />
                 {version.note && <p className="text-sm">{version.note}</p>}
                 {!isCurrent && (
                   <div className="flex flex-wrap gap-3 text-sm">
@@ -101,6 +106,25 @@ export default async function VersionsPage({
         </ul>
       </section>
     </div>
+  )
+}
+
+function VersionStats(props: {
+  stats: { up: number; down: number } | undefined
+  versionId: string
+}) {
+  const { up = 0, down = 0 } = props.stats ?? {}
+  if (up + down === 0) return <p className={hintClass}>評価はまだありません</p>
+  return (
+    <p className="text-sm">
+      👍 {up}・👎 {down}（👍の割合 {Math.round((up / (up + down)) * 100)}%）{' '}
+      <Link
+        href={`/admin/feedbacks?version=${props.versionId}`}
+        className="text-xs hover:underline"
+      >
+        評価を見る
+      </Link>
+    </p>
   )
 }
 

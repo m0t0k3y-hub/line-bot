@@ -9,6 +9,8 @@ import { getPersona } from '@/personas/store'
 import { PersonaEditor } from '../persona-editor'
 import { PersonaMetaForm } from './meta-form'
 
+export const instant = false
+
 export default async function EditPersonaPage({ params }: PageProps<'/admin/personas/[id]'>) {
   await requireAdmin()
   const { id } = await params

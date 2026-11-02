@@ -95,6 +95,8 @@ describe('globalSettingsSchema', () => {
       limitMessage: 'a',
       errorMessage: 'b',
       llmTimeoutSec: '60',
+      feedbackAckEnabled: 'false',
+      feedbackAckMessage: 'ありがと',
     })
     expect(result.error?.issues[0]?.message).toBe('LLM の時間切れは 50 以下にしてください')
   })

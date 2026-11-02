@@ -77,6 +77,11 @@ export const globalSettingsSchema = z.object({
   ),
   errorMessage: message('エラー時の返信').min(1, 'エラー時の返信を入力してください'),
   llmTimeoutSec: intField('LLM の時間切れ', limits.llmTimeoutSec),
+  feedbackAckEnabled: z.enum(['true', 'false']).transform((v) => v === 'true'),
+  feedbackAckMessage: message('評価を受け付けたときの返信').min(
+    1,
+    '評価を受け付けたときの返信を入力してください',
+  ),
 })
 
 export const chatSettingsSchema = z.object({

@@ -6,6 +6,8 @@ import { providerLabels } from '@/lib/providers'
 import { listPersonas } from '@/personas/store'
 import { ArchivePersonaButton, DuplicatePersonaButton } from './persona-buttons'
 
+export const instant = false
+
 export default async function PersonasPage() {
   await requireAdmin()
   const personas = await listPersonas()

@@ -8,6 +8,8 @@ import { getChat, listPersonaOptions } from '@/chats/store'
 import { chatTypeLabels } from '../labels'
 import { ChatSettingsForm } from './chat-settings-form'
 
+export const instant = false
+
 const toText = (value: number | null) => (value === null ? '' : String(value))
 
 export default async function ChatPage({ params }: PageProps<'/admin/chats/[id]'>) {
@@ -35,6 +37,9 @@ export default async function ChatPage({ params }: PageProps<'/admin/chats/[id]'
           {chatTypeLabels[chat.type]}・{chat.active ? '参加中' : '退出済み'}・今日の返信{' '}
           {chat.todayCount} / {dailyLimit}
         </p>
+        <Link href={`/admin/chats/${chat.id}/messages`} className="text-sm hover:underline">
+          会話ログを見る →
+        </Link>
       </div>
 
       <ChatSettingsForm

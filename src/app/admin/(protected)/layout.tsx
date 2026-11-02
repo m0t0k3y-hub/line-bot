@@ -13,6 +13,7 @@ const menu = [
   { href: '/admin/personas', label: 'ペルソナ' },
   { href: '/admin/playground', label: 'プレイグラウンド' },
   { href: '/admin/chats', label: 'トーク・グループ' },
+  { href: '/admin/feedbacks', label: '評価' },
   { href: '/admin/settings', label: '全体の設定' },
   { href: '/admin/admins', label: '管理者' },
 ] as const

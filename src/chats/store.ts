@@ -54,10 +54,7 @@ export async function updateChatSettings(
 }
 
 export async function updateGlobalSettings(
-  values: Omit<
-    typeof settings.$inferInsert,
-    'id' | 'updatedAt' | 'feedbackAckEnabled' | 'feedbackAckMessage'
-  >,
+  values: Omit<typeof settings.$inferInsert, 'id' | 'updatedAt'>,
 ): Promise<void> {
   await getDb()
     .insert(settings)

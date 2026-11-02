@@ -126,6 +126,31 @@ export const messages = pgTable(
   (t) => [index().on(t.chatId, t.createdAt), index().on(t.lineMessageId)],
 )
 
+export const feedbackSources = ['line', 'admin'] as const
+
+// Bot の返答への評価（docs/spec.md「4.6」「5.6」）。同じ人が評価し直したら上書きする
+export const feedbacks = pgTable(
+  'feedbacks',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    messageId: uuid('message_id')
+      .notNull()
+      .references(() => messages.id, { onDelete: 'cascade' }),
+    // +1（良い）か -1（悪い）
+    rating: smallint('rating').notNull(),
+    comment: text('comment').notNull().default(''),
+    source: text('source', { enum: feedbackSources }).notNull(),
+    lineUserId: text('line_user_id'),
+    adminId: uuid('admin_id').references(() => admins.id, { onDelete: 'set null' }),
+    ...timestamps,
+  },
+  (t) => [
+    unique().on(t.messageId, t.lineUserId),
+    unique().on(t.messageId, t.adminId),
+    index().on(t.createdAt),
+  ],
+)
+
 // LINE の再送で同じイベントを二重に処理しないための記録
 export const webhookEvents = pgTable('webhook_events', {
   webhookEventId: text('webhook_event_id').primaryKey(),
@@ -171,5 +196,6 @@ export type Admin = typeof admins.$inferSelect
 export type Persona = typeof personas.$inferSelect
 export type Chat = typeof chats.$inferSelect
 export type Message = typeof messages.$inferSelect
+export type Feedback = typeof feedbacks.$inferSelect
 export type PersonaVersion = typeof personaVersions.$inferSelect
 export type Settings = typeof settings.$inferSelect

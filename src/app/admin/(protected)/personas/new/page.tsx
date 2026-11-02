@@ -3,6 +3,8 @@ import { modelSuggestions, providers } from '@/lib/providers'
 import { isProviderAvailable } from '@/llm'
 import { PersonaEditor } from '../persona-editor'
 
+export const instant = false
+
 export default async function NewPersonaPage() {
   await requireAdmin()
   const availableProviders = providers.filter(isProviderAvailable)
