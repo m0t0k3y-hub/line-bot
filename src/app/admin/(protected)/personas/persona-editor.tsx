@@ -16,6 +16,9 @@ import type { PersonaConfigForm } from '@/personas/config'
 import { Playground } from '../playground/playground'
 import { type ActionState, savePersonaAction } from './actions'
 
+// モデルの選択肢のうち「その他（直接入力）」を表す値
+const CUSTOM_MODEL = '__custom__'
+
 // プロバイダー別のオプションの入力例
 const optionExamples: Record<Provider, string> = {
   anthropic: '{ "effort": "low" }',
@@ -43,8 +46,14 @@ export function PersonaEditor(props: Props) {
     setConfig((prev) => ({ ...prev, [key]: value }))
   }
 
+  const suggestions = modelSuggestions[config.provider]
+  // 候補にないモデル ID が入っているとき（直接入力）は、自由入力の欄を出す
+  const [customModel, setCustomModel] = useState(false)
+  const isCustomModel = customModel || !suggestions.some((model) => model.id === config.model)
+
   // モデル ID とオプションはプロバイダーごとに違うので、切り替えたら入れ替える
   function changeProvider(provider: Provider) {
+    setCustomModel(false)
     setConfig((prev) => ({
       ...prev,
       provider,
@@ -203,18 +212,32 @@ export function PersonaEditor(props: Props) {
             <label className={hintClass} htmlFor="model">
               モデル ID
             </label>
-            <input
+            <select
               id="model"
-              list="model-suggestions"
-              value={config.model}
-              onChange={(e) => update('model', e.target.value)}
+              value={isCustomModel ? CUSTOM_MODEL : config.model}
+              onChange={(e) => {
+                const custom = e.target.value === CUSTOM_MODEL
+                setCustomModel(custom)
+                if (!custom) update('model', e.target.value)
+              }}
               className={inputClass}
-            />
-            <datalist id="model-suggestions">
-              {modelSuggestions[config.provider].map((model) => (
-                <option key={model.id} value={model.id} label={model.tier} />
+            >
+              {suggestions.map((model) => (
+                <option key={model.id} value={model.id}>
+                  {model.id}（{model.tier}）
+                </option>
               ))}
-            </datalist>
+              <option value={CUSTOM_MODEL}>その他（直接入力）</option>
+            </select>
+            {isCustomModel && (
+              <input
+                aria-label="モデル ID（直接入力）"
+                value={config.model}
+                onChange={(e) => update('model', e.target.value)}
+                placeholder="例：gpt-6-sol"
+                className={inputClass}
+              />
+            )}
           </div>
           <div className="space-y-1">
             <label className={hintClass} htmlFor="maxOutputTokens">
