@@ -1,31 +1,56 @@
 import 'server-only'
 
-import { and, asc, desc, eq, isNull } from 'drizzle-orm'
+import { and, asc, count, desc, eq, isNull, max } from 'drizzle-orm'
 
 import { getDb } from '@/db'
-import { type Chat, chats, dailyUsage, personas, settings } from '@/db/schema'
+import { type Chat, chats, dailyUsage, messages, personas, settings } from '@/db/schema'
 import { jstDate } from './settings'
 
-/** トーク・グループの一覧。割り当てたペルソナの名前と、今日の返信数を付ける */
+/**
+ * トーク・グループの一覧。割り当てたペルソナの名前、今日の返信数、会話のメッセージ数、最後のやり取りを付ける。
+ * 有効なチャットを先にし、その中で最後のやり取りが新しい順に並べる（docs/spec.md「5.8」）
+ */
 export async function listChats() {
-  const rows = await getDb()
-    .select({
-      chat: chats,
-      personaName: personas.name,
-      personaArchived: personas.archivedAt,
-      todayCount: dailyUsage.replyCount,
-    })
-    .from(chats)
-    .leftJoin(personas, eq(personas.id, chats.personaId))
-    .leftJoin(dailyUsage, and(eq(dailyUsage.chatId, chats.id), eq(dailyUsage.date, jstDate())))
-    .orderBy(desc(chats.active), desc(chats.updatedAt))
+  const db = getDb()
+  const [rows, stats] = await Promise.all([
+    db
+      .select({
+        chat: chats,
+        personaName: personas.name,
+        personaArchived: personas.archivedAt,
+        todayCount: dailyUsage.replyCount,
+      })
+      .from(chats)
+      .leftJoin(personas, eq(personas.id, chats.personaId))
+      .leftJoin(dailyUsage, and(eq(dailyUsage.chatId, chats.id), eq(dailyUsage.date, jstDate())))
+      .orderBy(desc(chats.active), desc(chats.updatedAt)),
+    db
+      .select({
+        chatId: messages.chatId,
+        messageCount: count(),
+        lastMessageAt: max(messages.createdAt),
+      })
+      .from(messages)
+      .where(eq(messages.kind, 'chat'))
+      .groupBy(messages.chatId),
+  ])
+  const statsByChat = new Map(stats.map((row) => [row.chatId, row]))
 
-  return rows.map((row) => ({
-    ...row.chat,
-    personaName: row.personaName,
-    personaArchived: row.personaArchived !== null,
-    todayCount: row.todayCount ?? 0,
-  }))
+  return rows
+    .map((row) => ({
+      ...row.chat,
+      personaName: row.personaName,
+      personaArchived: row.personaArchived !== null,
+      todayCount: row.todayCount ?? 0,
+      messageCount: statsByChat.get(row.chat.id)?.messageCount ?? 0,
+      lastMessageAt: statsByChat.get(row.chat.id)?.lastMessageAt ?? null,
+    }))
+    .sort(
+      // やり取りがないチャットは最後に置く。同じなら DB の並び（更新が新しい順）のまま
+      (a, b) =>
+        Number(b.active) - Number(a.active) ||
+        (b.lastMessageAt?.getTime() ?? 0) - (a.lastMessageAt?.getTime() ?? 0),
+    )
 }
 
 export async function getChat(id: string) {
