@@ -2,10 +2,15 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import { requireAdmin } from '@/admin/auth'
-import { hintClass } from '@/app/admin/ui'
+import { hintClass, inputClass, secondaryButtonClass } from '@/app/admin/ui'
 import { jstDate } from '@/chats/settings'
 import { getChat } from '@/chats/store'
-import { listChatMessages, MESSAGES_PAGE_SIZE } from '@/feedbacks/store'
+import {
+  listChatMessages,
+  listMessageDays,
+  MESSAGES_PAGE_SIZE,
+  nextJstDay,
+} from '@/feedbacks/store'
 import { BulkDeletePanel, DeleteMessageButton, RateControls } from './message-controls'
 
 export const instant = false
@@ -35,10 +40,13 @@ export default async function MessagesPage({
 
   const chat = await getChat(id)
   if (!chat) notFound()
-  const messages = await listChatMessages(
-    id,
-    beforeDate && !Number.isNaN(beforeDate.getTime()) ? beforeDate : undefined,
-  )
+  const [messages, days] = await Promise.all([
+    listChatMessages(
+      id,
+      beforeDate && !Number.isNaN(beforeDate.getTime()) ? beforeDate : undefined,
+    ),
+    listMessageDays(id),
+  ])
   const oldest = messages.at(-1)
 
   return (
@@ -52,6 +60,8 @@ export default async function MessagesPage({
           新しい順に表示しています。Bot の返答には、管理者として評価を付けられます。
         </p>
       </div>
+
+      <ExportPanel chatId={id} days={days} />
 
       <BulkDeletePanel chatId={id} today={jstDate()} />
 
@@ -140,5 +150,72 @@ export default async function MessagesPage({
         </Link>
       )}
     </div>
+  )
+}
+
+/** 日ごとの件数と、テキストでの書き出し（docs/spec.md「5.8」） */
+function ExportPanel({
+  chatId,
+  days,
+}: {
+  chatId: string
+  days: { date: string; count: number }[]
+}) {
+  const exportHref = (from?: string, to?: string) =>
+    `/admin/chats/${chatId}/messages/export${from ? `?from=${from}&to=${to}` : ''}`
+
+  return (
+    <section className="space-y-3 rounded-lg border border-zinc-200 p-3 dark:border-zinc-800">
+      <h2 className="text-sm font-semibold">日ごとの件数と書き出し</h2>
+
+      {days.length === 0 ? (
+        <p className={hintClass}>会話のログはありません。</p>
+      ) : (
+        <ul className="grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
+          {days.map((day) => (
+            <li key={day.date} className="flex gap-3">
+              <span className="tabular-nums">{day.date}</span>
+              <span className="text-zinc-500">{day.count} 件</span>
+              <Link
+                href={`/admin/chats/${chatId}/messages?before=${encodeURIComponent(nextJstDay(day.date).toISOString())}`}
+                className="hover:underline"
+              >
+                見る
+              </Link>
+              <a
+                href={exportHref(day.date, day.date)}
+                target="_blank"
+                rel="noreferrer"
+                className="hover:underline"
+              >
+                書き出す
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <form
+        action={`/admin/chats/${chatId}/messages/export`}
+        method="get"
+        target="_blank"
+        className="flex flex-wrap items-end gap-2"
+      >
+        <label className="text-sm">
+          開始日
+          <input type="date" name="from" className={`${inputClass} mt-1`} />
+        </label>
+        <label className="text-sm">
+          終了日
+          <input type="date" name="to" className={`${inputClass} mt-1`} />
+        </label>
+        <button type="submit" className={secondaryButtonClass}>
+          期間を指定して書き出す
+        </button>
+      </form>
+      <p className={hintClass}>
+        会話のメッセージだけを古い順にテキストで新しいタブに表示します（評価やエラーは含めません）。日付を空欄にすると、その端を区切らずに書き出します。
+      </p>
+    </section>
   )
 }

@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { and, count, desc, eq, gte, inArray, lt, sql, type SQL } from 'drizzle-orm'
+import { and, asc, count, desc, eq, gte, inArray, lt, sql, type SQL } from 'drizzle-orm'
 
 import { jstDate } from '@/chats/settings'
 import { getDb } from '@/db'
@@ -20,7 +20,7 @@ export function startOfJstDay(date: string): Date {
   return new Date(`${date}T00:00:00+09:00`)
 }
 
-function nextJstDay(date: string): Date {
+export function nextJstDay(date: string): Date {
   return new Date(startOfJstDay(date).getTime() + 24 * 60 * 60 * 1000)
 }
 
@@ -83,6 +83,37 @@ export async function listChatMessages(chatId: string, before?: Date) {
     persona: row.personaName ? `${row.personaName} 版${row.versionNo}` : null,
     feedbacks: feedbacksByMessage.get(row.message.id) ?? [],
   }))
+}
+
+/** 日本時間の日付ごとの、会話のメッセージの数（新しい順、最大 60 日分） */
+export async function listMessageDays(chatId: string) {
+  const date = sql<string>`to_char(${messages.createdAt} at time zone 'Asia/Tokyo', 'YYYY-MM-DD')`
+  return getDb()
+    .select({ date, count: count() })
+    .from(messages)
+    .where(and(eq(messages.chatId, chatId), eq(messages.kind, 'chat')))
+    .groupBy(date)
+    .orderBy(desc(date))
+    .limit(60)
+}
+
+/** 書き出す会話のメッセージ（古い順）。期間は日本時間の日付で、両端を含む */
+export async function listTranscriptMessages(chatId: string, from?: string, to?: string) {
+  const conditions: SQL[] = [eq(messages.chatId, chatId), eq(messages.kind, 'chat')]
+  if (from) conditions.push(gte(messages.createdAt, startOfJstDay(from)))
+  if (to) conditions.push(lt(messages.createdAt, nextJstDay(to)))
+
+  return getDb()
+    .select({
+      role: messages.role,
+      text: messages.text,
+      createdAt: messages.createdAt,
+      speaker: lineUsers.displayName,
+    })
+    .from(messages)
+    .leftJoin(lineUsers, eq(lineUsers.lineUserId, messages.lineUserId))
+    .where(and(...conditions))
+    .orderBy(asc(messages.createdAt))
 }
 
 export async function deleteMessage(chatId: string, messageId: string): Promise<void> {
