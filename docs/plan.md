@@ -151,4 +151,4 @@ LINE チャネルの設定項目は、仕様書の「10. 事前の準備」を�
 | 4 ペルソナの調整 | 完了 | [#5](https://github.com/m0t0k3y-hub/line-bot/pull/5) |
 | 5 設定と制限 | 完了 | [#6](https://github.com/m0t0k3y-hub/line-bot/pull/6) |
 | 6 評価とログ | 完了 | [#7](https://github.com/m0t0k3y-hub/line-bot/pull/7) |
-| 7 ログの確認と書き出し | 作業中 | |
+| 7 ログの確認と書き出し | 完了 | [#8](https://github.com/m0t0k3y-hub/line-bot/pull/8) |
